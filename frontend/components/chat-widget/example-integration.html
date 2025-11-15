@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget Integration Example</title>
+    
+    <!-- Chat Widget CSS -->
+    <link rel="stylesheet" href="/components/chat-widget/chat-widget.css">
+</head>
+<body>
+    <!-- Your existing website content here -->
+    <h1>Absolute App Labs Website</h1>
+    <p>This is an example of how to integrate the chat widget.</p>
+    
+    <!-- Chat Widget Configuration -->
+    <script>
+        // Configure the chat widget before it initializes
+        window.chatWidgetConfig = {
+            apiUrl: 'http://localhost:8000', // Change to your backend URL in production
+            welcomeMessage: 'Hi! I\'m your AI assistant. How can I help you today?',
+            quickQuestions: [
+                'What services does Absolute App Labs offer?',
+                'Tell me about your AI capabilities',
+                'How can I get started with a project?',
+                'What is your pricing model?'
+            ]
+        };
+    </script>
+    
+    <!-- Chat Widget JavaScript -->
+    <script src="/components/chat-widget/chat-widget.js"></script>
+    
+    <!-- Or initialize manually -->
+    <!--
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            new ChatWidget({
+                apiUrl: 'http://localhost:8000',
+                welcomeMessage: 'Custom welcome message',
+                quickQuestions: ['Question 1', 'Question 2']
+            });
+        });
+    </script>
+    -->
+</body>
+</html>
