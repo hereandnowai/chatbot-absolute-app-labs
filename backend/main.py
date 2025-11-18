@@ -1,6 +1,6 @@
 """
 FastAPI backend for Absolute App Labs chatbot
-Powered by Google Gemini 2.0 Flash-Lite
+Powered by Google Gemini 2.0 Flash
 """
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,7 +22,7 @@ from llm import generate_response
 # Initialize FastAPI app
 app = FastAPI(
     title="Absolute App Labs Chat API",
-    description="AI-powered chat widget backend using Gemini 2.0 Flash-Lite",
+    description="AI-powered chat widget backend using Google Gemini 2.0 Flash",
     version="1.0.0"
 )
 
@@ -70,7 +70,7 @@ async def root():
     return {
         "status": "ok",
         "service": "Absolute App Labs Chat API",
-        "model": "Google Gemini 2.0 Flash-Lite"
+        "model": "Google Gemini 2.0 Flash"
     }
 
 # Chat endpoint
@@ -104,10 +104,17 @@ async def chat(
             db.add(new_session)
             db.commit()
         else:
-            # Verify session exists
+            # Verify session exists, create if not found
             session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
             if not session:
-                raise HTTPException(status_code=404, detail="Session not found")
+                # Session doesn't exist (maybe expired or DB was reset)
+                # Create a new session with the provided ID
+                new_session = ChatSession(
+                    id=session_id,
+                    ip_address=get_remote_address(request)
+                )
+                db.add(new_session)
+                db.commit()
         
         # Get chat history
         messages = db.query(ChatMessage).filter(
@@ -122,7 +129,7 @@ async def chat(
             for msg in messages
         ]
         
-        # Generate response using Gemini 2.0 Flash-Lite
+        # Generate response using Google Gemini 2.0 Flash
         response_text, sources = await generate_response(
             chat_request.message,
             chat_history,

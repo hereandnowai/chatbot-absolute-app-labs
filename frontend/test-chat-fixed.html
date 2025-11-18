@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget Test - FIXED VERSION</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { 
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status { 
+            padding: 25px; 
+            background: white; 
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .success { color: #10b981; font-weight: 600; }
+        .error { color: #ef4444; font-weight: 600; }
+        .warning { color: #f59e0b; font-weight: 600; }
+        button {
+            padding: 12px 24px;
+            margin: 5px;
+            background: #274DA1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #1e3a7a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .info-box {
+            background: #dbeafe;
+            padding: 20px;
+            border-left: 4px solid #274DA1;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .response-box {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #e5e7eb;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Chat Widget Test - FIXED</h1>
+        
+        <div class="info-box">
+            <strong>📋 Testing Instructions:</strong>
+            <ol>
+                <li>First, verify backend status is ✅</li>
+                <li>Click "Test Chat API" to ensure backend works</li>
+                <li>Use the chat widget (bottom-right) to test the interface</li>
+                <li>If you see errors, click "Clear Session & Reload"</li>
+            </ol>
+        </div>
+        
+        <div class="status">
+            <h2>🔌 Backend Status:</h2>
+            <div id="backend-status">Checking...</div>
+        </div>
+        
+        <div class="status">
+            <h2>🧪 Quick Tests:</h2>
+            <button onclick="testChat()">Test Chat API</button>
+            <button onclick="clearStorage()">Clear Session & Reload</button>
+            <button onclick="showDebugInfo()">Show Debug Info</button>
+            <div id="chat-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <div class="status" id="debug-section" style="display: none;">
+            <h2>🔍 Debug Information:</h2>
+            <div id="debug-content" class="response-box"></div>
+        </div>
+    </div>
+
+    <!-- Chat Widget Integration -->
+    <link rel="stylesheet" href="/components/chat-widget/chat-widget.css">
+    <script>
+        // Configure the chat widget
+        window.chatWidgetConfig = {
+            apiUrl: 'http://localhost:8000',
+            welcomeMessage: 'Hi! I\'m your AI assistant. Ask me about Absolute App Labs!',
+            quickQuestions: [
+                'What services does Absolute App Labs offer?',
+                'What is your contact phone number?',
+                'Tell me about your AI capabilities'
+            ]
+        };
+
+        // Check backend health
+        async function checkBackend() {
+            console.log('🔍 Checking backend health...');
+            const statusDiv = document.getElementById('backend-status');
+            
+            try {
+                const response = await fetch('http://localhost:8000/', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ Backend is healthy:', data);
+                
+                statusDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Backend is running successfully!<br><br>
+                        <strong>Service:</strong> ${data.service}<br>
+                        <strong>Model:</strong> ${data.model}<br>
+                        <strong>Status:</strong> ${data.status}
+                    </div>
+                `;
+                return true;
+            } catch (error) {
+                console.error('❌ Backend check failed:', error);
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Backend not responding!<br><br>
+                        <strong>Error:</strong> ${error.message}<br><br>
+                        <strong>Solution:</strong> Make sure backend is running:<br>
+                        <code>cd backend && python3 main.py</code>
+                    </div>
+                `;
+                return false;
+            }
+        }
+
+        // Test chat API
+        async function testChat() {
+            const resultDiv = document.getElementById('chat-result');
+            resultDiv.innerHTML = '<span class="warning">⏳ Sending test message...</span>';
+            
+            console.log('🧪 Testing chat API...');
+            
+            try {
+                const testMessage = 'Hello! What services does Absolute App Labs offer?';
+                console.log('Sending:', testMessage);
+                
+                const response = await fetch('http://localhost:8000/api/chat', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Origin': 'http://localhost:3000'
+                    },
+                    body: JSON.stringify({
+                        message: testMessage
+                    })
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ Success! Response:', data);
+                
+                // Save session
+                localStorage.setItem('chat_session_id', data.session_id);
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <strong>✅ Chat API Working Perfect!</strong><br><br>
+                        <div class="response-box">
+                            <strong>🤖 Bot Response:</strong><br>
+                            ${data.reply}<br><br>
+                            <strong>🔑 Session ID:</strong> ${data.session_id}
+                        </div>
+                        <br>
+                        <em>✨ Now try the chat widget in the bottom-right corner!</em>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('❌ Test failed:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Test Failed!</strong><br><br>
+                        <strong>Error:</strong> ${error.message}<br><br>
+                        <button onclick="clearStorage()">Clear Session & Try Again</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Clear localStorage and reload
+        function clearStorage() {
+            console.log('🗑️ Clearing localStorage...');
+            localStorage.removeItem('chat_session_id');
+            alert('✅ Session cleared! Page will reload.');
+            location.reload();
+        }
+
+        // Show debug information
+        function showDebugInfo() {
+            const debugSection = document.getElementById('debug-section');
+            const debugContent = document.getElementById('debug-content');
+            
+            const sessionId = localStorage.getItem('chat_session_id');
+            
+            debugContent.innerHTML = `
+                <strong>Configuration:</strong><br>
+                API URL: ${window.chatWidgetConfig.apiUrl}<br>
+                Welcome Message: ${window.chatWidgetConfig.welcomeMessage}<br>
+                Quick Questions: ${window.chatWidgetConfig.quickQuestions.length} items<br><br>
+                
+                <strong>Session Info:</strong><br>
+                Stored Session ID: ${sessionId || 'None (will be created on first message)'}<br><br>
+                
+                <strong>Browser Info:</strong><br>
+                User Agent: ${navigator.userAgent}<br>
+                Current URL: ${window.location.href}<br><br>
+                
+                <strong>📝 Check Console:</strong> Press F12 to see detailed logs
+            `;
+            
+            debugSection.style.display = 'block';
+            
+            console.log('=== DEBUG INFO ===');
+            console.log('Widget Config:', window.chatWidgetConfig);
+            console.log('Session ID:', sessionId);
+            console.log('LocalStorage:', localStorage);
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('=== PAGE LOADED ===');
+            console.log('Test page initialized');
+            console.log('Backend URL:', window.chatWidgetConfig.apiUrl);
+            checkBackend();
+        });
+
+        // Monitor errors
+        window.addEventListener('error', (e) => {
+            console.error('⚠️ Page Error:', e.message, e.filename, e.lineno);
+        });
+        
+        console.log('✅ Test script loaded successfully');
+    </script>
+    <script src="/components/chat-widget/chat-widget.js"></script>
+</body>
+</html>

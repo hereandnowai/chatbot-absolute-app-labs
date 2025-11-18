@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; white-space: pre-wrap; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Chatbot Debug Test</h1>
+    
+    <button onclick="testBackend()">1. Test Backend Health</button>
+    <button onclick="testChat()">2. Test Chat API</button>
+    <button onclick="clearStorage()">3. Clear LocalStorage</button>
+    <button onclick="testWithSession()">4. Test with Session</button>
+    
+    <div id="logs"></div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let testSessionId = null;
+
+        function log(message, data = null) {
+            const logDiv = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = 'log';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            if (data) {
+                entry.textContent += '\n' + JSON.stringify(data, null, 2);
+            }
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function testBackend() {
+            log('Testing backend health...');
+            try {
+                const response = await fetch(`${API_URL}/`);
+                const data = await response.json();
+                log('✅ Backend is healthy', data);
+            } catch (error) {
+                log('❌ Backend error', { error: error.message });
+            }
+        }
+
+        async function testChat() {
+            log('Testing chat without session...');
+            try {
+                const response = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: 'Hello, this is a test!'
+                    })
+                });
+                
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${text}`);
+                }
+                
+                const data = await response.json();
+                testSessionId = data.session_id;
+                log('✅ Chat successful', data);
+                localStorage.setItem('chat_session_id', testSessionId);
+            } catch (error) {
+                log('❌ Chat error', { error: error.message });
+            }
+        }
+
+        async function testWithSession() {
+            const sessionId = localStorage.getItem('chat_session_id') || testSessionId;
+            if (!sessionId) {
+                log('⚠️  No session ID found. Run test 2 first.');
+                return;
+            }
+            
+            log(`Testing chat with session: ${sessionId}`);
+            try {
+                const response = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: 'Follow-up message with session'
+                    })
+                });
+                
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${text}`);
+                }
+                
+                const data = await response.json();
+                log('✅ Chat with session successful', data);
+            } catch (error) {
+                log('❌ Chat with session error', { error: error.message });
+            }
+        }
+
+        function clearStorage() {
+            localStorage.removeItem('chat_session_id');
+            testSessionId = null;
+            log('✅ LocalStorage cleared');
+        }
+
+        // Auto-run health check
+        testBackend();
+    </script>
+</body>
+</html>

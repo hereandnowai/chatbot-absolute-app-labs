@@ -3337,5 +3337,24 @@ var wpcf7iqfix = {"recaptcha_empty":"Please verify that you are not a robot.","r
 </script>
 <script type="text/javascript" src="https://www.google.com/recaptcha/api.js?hl=en_US&amp;onload=recaptchaCallback&amp;render=explicit&amp;ver=2.0" id="google-recaptcha-js"></script>
 <script type="text/javascript" src="https://absoluteapplabs.com/wp-content/plugins/kingcomposer/assets/frontend/js/kingcomposer.min.js?ver=2.9.6" id="kc-front-scripts-js"></script>
+
+<!-- Chat Widget Integration -->
+<link rel="stylesheet" href="/components/chat-widget/chat-widget.css">
+<script>
+    // Configure the chat widget
+    window.chatWidgetConfig = {
+        apiUrl: 'http://localhost:8000',
+        welcomeMessage: 'Hi! I\'m your AI assistant from Absolute App Labs. How can I help you today?',
+        quickQuestions: [
+            'What services does Absolute App Labs offer?',
+            'Tell me about your AI capabilities',
+            'How can I get started with a project?',
+            'What is your product development process?'
+        ]
+    };
+</script>
+<script src="/components/chat-widget/chat-widget.js"></script>
+<!-- End Chat Widget -->
+
 </body>
 </html>

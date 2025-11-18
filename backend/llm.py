@@ -1,21 +1,47 @@
 """
-LangChain integration with Google Gemini 2.0 Flash-Lite
-CRITICAL: This module MUST use Gemini 2.0 Flash-Lite model ONLY
+Google Gemini AI integration for chatbot
+Using google-generativeai SDK directly (no LangChain)
 """
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.schema import HumanMessage, AIMessage, SystemMessage
+import google.generativeai as genai
 from typing import List, Dict, Tuple
 from config import GOOGLE_API_KEY, MAX_HISTORY_LENGTH
 from search import google_search, format_search_context
 
-# Initialize Gemini 2.0 Flash-Lite model
-# MANDATORY: Must use gemini-2.0-flash-lite model
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash-lite",
-    google_api_key=GOOGLE_API_KEY,
-    temperature=0.7,
-    max_output_tokens=1024,
+# Configure Gemini API
+genai.configure(api_key=GOOGLE_API_KEY)
+
+# Initialize Gemini model with system instructions
+model = genai.GenerativeModel(
+    model_name='gemini-2.0-flash',
+    generation_config={
+        'temperature': 0.7,
+        'top_p': 0.95,
+        'top_k': 40,
+        'max_output_tokens': 2048,
+    },
+    system_instruction="""You are an intelligent AI assistant for Absolute App Labs, a leading AI-powered product development company in Chennai, India.
+
+Company Overview:
+- Absolute App Labs specializes in custom mobile & web app development, AI-powered solutions, GIS platforms, and predictive battery management systems
+- Founded in 2020 with 6+ years of experience
+- 50+ expert developers
+- 10M+ active users on built applications
+- Based in Chennai, Tamil Nadu, India
+- Services include: Mobile App Development, Web Applications, AI Integration, Cloud & DevOps, Product Modernization
+
+Your Role:
+- Provide helpful, accurate information about Absolute App Labs services and capabilities
+- Answer technical questions about software development
+- Guide users on how to engage with the company
+- Be professional, friendly, and knowledgeable
+- When web search results are provided, cite sources appropriately
+- If you don't know something, admit it rather than making up information
+
+Contact Information:
+- Website: https://www.absoluteapplabs.com
+- Phone: +91-044 4596 7630
+- Address: AJ Block 4th Street, 35, 9th Main Rd, A J Block, Shanthi Colony, Anna Nagar, Chennai, Tamil Nadu 600040, India
+"""
 )
 
 # System prompt for the chatbot
@@ -43,40 +69,24 @@ Contact Information:
 - Address: AJ Block 4th Street, 35, 9th Main Rd, A J Block, Shanthi Colony, Anna Nagar, Chennai, Tamil Nadu 600040, India
 """
 
-def create_chat_prompt(
-    user_message: str,
-    chat_history: List[Dict[str, str]],
-    search_context: str = ""
-) -> List:
+def format_chat_history(chat_history: List[Dict[str, str]]) -> List[Dict[str, str]]:
     """
-    Create a prompt for the LLM with context
+    Format chat history for Gemini API
     
     Args:
-        user_message: Current user message
         chat_history: List of previous messages
-        search_context: Optional web search context
     
     Returns:
-        List of messages for the LLM
+        Formatted history for Gemini
     """
-    messages = [SystemMessage(content=SYSTEM_PROMPT)]
-    
-    # Add search context if available
-    if search_context:
-        context_message = f"\n\n{search_context}\n\nPlease use these search results to provide accurate, up-to-date information and cite sources when relevant."
-        messages.append(SystemMessage(content=context_message))
-    
-    # Add chat history (last N messages)
+    formatted = []
     for msg in chat_history[-MAX_HISTORY_LENGTH:]:
-        if msg["role"] == "user":
-            messages.append(HumanMessage(content=msg["content"]))
-        elif msg["role"] == "assistant":
-            messages.append(AIMessage(content=msg["content"]))
-    
-    # Add current user message
-    messages.append(HumanMessage(content=user_message))
-    
-    return messages
+        role = "user" if msg["role"] == "user" else "model"
+        formatted.append({
+            "role": role,
+            "parts": [msg["content"]]
+        })
+    return formatted
 
 async def generate_response(
     user_message: str,
@@ -84,7 +94,7 @@ async def generate_response(
     enable_search: bool = True
 ) -> Tuple[str, List[Dict[str, str]]]:
     """
-    Generate a response using Gemini 2.0 Flash-Lite
+    Generate a response using Google Gemini
     
     Args:
         user_message: User's message
@@ -104,16 +114,31 @@ async def generate_response(
             search_context = format_search_context(search_results)
             sources = search_results
     
-    # Create prompt with context
-    messages = create_chat_prompt(user_message, chat_history, search_context)
-    
-    # Generate response using Gemini 2.0 Flash-Lite
     try:
-        response = await llm.ainvoke(messages)
-        response_text = response.content
+        # Format history for Gemini
+        formatted_history = format_chat_history(chat_history)
+        
+        # Prepare the message with optional search context
+        enhanced_message = user_message
+        if search_context:
+            enhanced_message = f"{search_context}\n\nUser question: {user_message}"
+        
+        # If no history, generate directly; otherwise use chat
+        if not formatted_history:
+            response = model.generate_content(enhanced_message)
+            response_text = response.text
+        else:
+            chat = model.start_chat(history=formatted_history)
+            response = chat.send_message(enhanced_message)
+            response_text = response.text
+        
         return response_text, sources
+    
     except Exception as e:
+        # Print full traceback to aid debugging when the model call fails
+        import traceback
         print(f"Error generating response: {e}")
+        traceback.print_exc()
         return "I apologize, but I encountered an error processing your request. Please try again.", []
 
 def should_search(message: str) -> bool:

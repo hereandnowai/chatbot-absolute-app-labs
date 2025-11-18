@@ -28,6 +28,35 @@ class ChatWidget {
         this.injectStyles();
         this.createWidget();
         this.attachEventListeners();
+        // Verify backend after widget is created
+        setTimeout(() => this.verifyBackendConnection(), 100);
+    }
+    
+    async verifyBackendConnection() {
+        try {
+            const response = await fetch(`${this.config.apiUrl}/`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (response.ok) {
+                console.log('✓ Chat backend connected successfully');
+                // If we had a cached error session, clear it and reset
+                if (this.messages) {
+                    const hasError = Array.from(this.messages.children).some(el => 
+                        el.textContent.includes('encountered an error') || 
+                        el.textContent.includes('Unable to connect')
+                    );
+                    if (hasError) {
+                        console.log('Clearing cached error session...');
+                        localStorage.removeItem('chat_session_id');
+                        this.sessionId = this.createNewSession();
+                        this.messages.innerHTML = this.createWelcomeMessage();
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('Chat backend not available:', error);
+        }
     }
     
     injectStyles() {
@@ -201,6 +230,11 @@ class ChatWidget {
     async sendMessage(message) {
         if (!message.trim() || this.isTyping) return;
         
+        console.log('=== CHAT WIDGET DEBUG ===');
+        console.log('API URL:', this.config.apiUrl);
+        console.log('Session ID:', this.sessionId);
+        console.log('Message:', message);
+        
         // Clear welcome message if present
         const welcome = this.messages.querySelector('.chat-welcome');
         if (welcome) welcome.remove();
@@ -228,11 +262,16 @@ class ChatWidget {
                 })
             });
             
+            console.log('Chat API response status:', response.status);
+            
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Chat API error response:', errorText);
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const data = await response.json();
+            console.log('Chat API success:', data);
             
             // Update session ID
             this.sessionId = data.session_id;
@@ -246,11 +285,47 @@ class ChatWidget {
             
         } catch (error) {
             console.error('Error sending message:', error);
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack,
+                apiUrl: this.config.apiUrl,
+                sessionId: this.sessionId
+            });
             this.hideTypingIndicator();
-            this.addMessage(
-                'Sorry, I encountered an error. Please try again later.',
-                'bot'
-            );
+            
+            // Check if backend is reachable
+            const isBackendDown = error.message.includes('Failed to fetch') || error.message.includes('NetworkError');
+            
+            // If we got a 500 error, it might be a session issue - try clearing session
+            if (error.message.includes('500')) {
+                console.warn('Got 500 error, clearing session and retrying...');
+                localStorage.removeItem('chat_session_id');
+                this.sessionId = this.createNewSession();
+            }
+            
+            const errorMessage = isBackendDown 
+                ? 'Unable to connect to the chat server. Please check if the backend is running on port 8000.'
+                : 'Sorry, I encountered an error processing your request. Please try again.';
+            
+            this.addMessage(errorMessage, 'bot');
+            
+            // If it's a network error, suggest clearing the session
+            if (isBackendDown) {
+                setTimeout(() => {
+                    const retryDiv = document.createElement('div');
+                    retryDiv.className = 'chat-message bot';
+                    retryDiv.innerHTML = `
+                        <div class="message-content">
+                            <button onclick="localStorage.removeItem('chat_session_id'); location.reload();" 
+                                    style="padding: 8px 16px; background: #274DA1; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                                Retry Connection
+                            </button>
+                        </div>
+                    `;
+                    this.messages.appendChild(retryDiv);
+                    this.messages.scrollTop = this.messages.scrollHeight;
+                }, 500);
+            }
         }
     }
     

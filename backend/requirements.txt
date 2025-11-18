@@ -1,23 +1,21 @@
 # FastAPI and server dependencies
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-python-dotenv==1.0.0
-pydantic==2.5.0
-python-multipart==0.0.6
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-dotenv==1.0.1
+pydantic==2.9.0
+python-multipart==0.0.9
 
-# LangChain and AI dependencies
-langchain==0.1.0
-langchain-google-genai==0.0.6
-google-generativeai==0.3.2
+# Google Gemini AI
+google-generativeai==0.8.3
 
 # Database
-sqlalchemy==2.0.23
-aiosqlite==0.19.0
+sqlalchemy==2.0.35
+aiosqlite==0.20.0
 
 # HTTP requests and caching
-requests==2.31.0
-httpx==0.25.2
-cachetools==5.3.2
+requests==2.32.3
+httpx==0.27.2
+cachetools==5.5.0
 
 # Rate limiting
 slowapi==0.1.9

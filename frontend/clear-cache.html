@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Chat Cache</title>
+    <style>
+        body { font-family: Arial; padding: 40px; }
+        button { padding: 15px 30px; background: #274DA1; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #1e3a7a; }
+        .status { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Clear Chat Widget Cache</h1>
+    <button onclick="clearCache()">Clear All Cache & Reload</button>
+    <div class="status" id="status"></div>
+    
+    <script>
+        function clearCache() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('status').innerHTML = '✅ Cache cleared! Reloading...';
+            setTimeout(() => {
+                window.location.href = '/test-chat.html';
+            }, 1000);
+        }
+        
+        // Show current cache
+        window.onload = () => {
+            const keys = Object.keys(localStorage);
+            document.getElementById('status').innerHTML = `
+                <strong>Current localStorage:</strong><br>
+                ${keys.length > 0 ? keys.map(k => `${k}: ${localStorage.getItem(k)}`).join('<br>') : 'Empty'}
+            `;
+        };
+    </script>
+</body>
+</html>
