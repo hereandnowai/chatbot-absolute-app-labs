@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Chat Widget</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .debug-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #debugOutput {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #274DA1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1e3a7a;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Chat Widget Debug</h1>
+    
+    <div class="debug-panel">
+        <h2>Controls</h2>
+        <button onclick="testChatWidget()">Test Chat Widget</button>
+        <button onclick="clearSession()">Clear Session</button>
+        <button onclick="clearDebug()">Clear Debug Log</button>
+    </div>
+    
+    <div class="debug-panel">
+        <h2>Debug Output</h2>
+        <div id="debugOutput">Waiting for actions...</div>
+    </div>
+
+    <!-- Chat Widget -->
+    <link rel="stylesheet" href="/components/chat-widget/chat-widget.css">
+    <script>
+        // Intercept console.log
+        const debugOutput = [];
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            debugOutput.push(`[LOG] ${message}`);
+            updateDebugDisplay();
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            debugOutput.push(`[ERROR] ${message}`);
+            updateDebugDisplay();
+        };
+        
+        function updateDebugDisplay() {
+            document.getElementById('debugOutput').innerHTML = 
+                debugOutput.slice(-20).join('\n');
+        }
+        
+        function testChatWidget() {
+            if (window.chatWidget) {
+                console.log('Sending test message: Hello');
+                window.chatWidget.sendMessage('Hello');
+            } else {
+                console.error('Chat widget not initialized');
+            }
+        }
+        
+        function clearSession() {
+            localStorage.removeItem('chat_session_id');
+            console.log('Session cleared');
+            if (window.chatWidget) {
+                window.chatWidget.sessionId = window.chatWidget.createNewSession();
+                console.log('New session ID:', window.chatWidget.sessionId);
+            }
+        }
+        
+        function clearDebug() {
+            debugOutput.length = 0;
+            document.getElementById('debugOutput').innerHTML = 'Debug log cleared';
+        }
+        
+        // Chat Widget Config
+        window.chatWidgetConfig = {
+            apiUrl: 'http://localhost:8000',
+            welcomeMessage: 'Test Mode Active',
+            position: 'bottom-right'
+        };
+    </script>
+    <script src="/components/chat-widget/chat-widget.js"></script>
+    <script>
+        // Store reference to chat widget
+        window.addEventListener('load', function() {
+            // Find the chat widget instance
+            setTimeout(() => {
+                console.log('Page loaded');
+                console.log('Chat widget config:', window.chatWidgetConfig);
+            }, 500);
+        });
+    </script>
+</body>
+</html>

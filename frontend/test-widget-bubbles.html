@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget with Product Bubbles Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .info-panel {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .info-panel h2 {
+            margin-top: 0;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+        .test-instructions {
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-instructions ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        .test-instructions li {
+            margin: 8px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: rgba(76, 175, 80, 0.3);
+            border-left: 4px solid #4CAF50;
+        }
+        .status.info {
+            background: rgba(33, 150, 243, 0.3);
+            border-left: 4px solid #2196F3;
+        }
+        code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Chat Widget - Product Bubbles Test</h1>
+    
+    <div class="test-instructions">
+        <h2>🎯 Test Instructions</h2>
+        <ol>
+            <li><strong>Open the chat widget</strong> by clicking the chat icon in the bottom right corner</li>
+            <li><strong>Check for product bubbles</strong> - You should see 6 product options displayed as clickable buttons</li>
+            <li><strong>Click a product bubble</strong> - e.g., "Mobile App Development"</li>
+            <li><strong>Answer the questions</strong> in sequence:
+                <ul>
+                    <li>Project description (what you want to build)</li>
+                    <li>Your name</li>
+                    <li>WhatsApp number (e.g., +12025551234)</li>
+                    <li>Email address</li>
+                </ul>
+            </li>
+            <li><strong>After lead collection</strong>, ask a general question like "What technologies do you use?"</li>
+            <li><strong>Verify</strong> that the chatbot transitions to normal Q&A mode</li>
+        </ol>
+    </div>
+    
+    <div class="info-panel">
+        <h2>✨ Expected Features</h2>
+        <div class="status success">
+            ✅ <strong>Product Bubbles:</strong> 6 service options displayed on first message
+        </div>
+        <div class="status success">
+            ✅ <strong>Guided Flow:</strong> Step-by-step lead capture with validation
+        </div>
+        <div class="status success">
+            ✅ <strong>Phone Validation:</strong> Must be valid format (e.g., +1234567890)
+        </div>
+        <div class="status success">
+            ✅ <strong>Email Validation:</strong> Must be valid email format
+        </div>
+        <div class="status info">
+            ℹ️ <strong>HubSpot:</strong> Will show error (401) if no real API key - this is expected
+        </div>
+        <div class="status success">
+            ✅ <strong>Q&A Mode:</strong> After lead collection, bot answers general questions
+        </div>
+    </div>
+    
+    <div class="info-panel">
+        <h2>🔧 Technical Details</h2>
+        <p><strong>Backend:</strong> <code>http://localhost:8000/api/chat</code></p>
+        <p><strong>Model:</strong> Google Gemini 2.0 Flash</p>
+        <p><strong>State Management:</strong> SQLite with conversation_state tracking</p>
+        <p><strong>Features:</strong></p>
+        <ul>
+            <li>Conversation stage tracking (8 stages)</li>
+            <li>Product selection with quick replies</li>
+            <li>Field validation with retry logic</li>
+            <li>HubSpot CRM integration (create/update contacts)</li>
+            <li>Seamless transition to general Q&A after lead capture</li>
+        </ul>
+    </div>
+
+    <!-- Load Chat Widget -->
+    <link rel="stylesheet" href="components/chat-widget/chat-widget.css">
+    <script src="components/chat-widget/chat-widget.js"></script>
+    <script>
+        // Initialize chat widget
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatWidget = new ChatWidget({
+                apiUrl: 'http://localhost:8000',
+                welcomeMessage: 'Welcome to Absolute App Labs! 👋',
+                position: 'bottom-right'
+            });
+            
+            console.log('Chat widget initialized');
+            console.log('Backend:', 'http://localhost:8000');
+            console.log('Session ID:', chatWidget.sessionId);
+        });
+    </script>
+</body>
+</html>

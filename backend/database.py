@@ -16,6 +16,7 @@ class ChatSession(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     ip_address = Column(String, nullable=True)
+    conversation_state = Column(Text, nullable=True)  # JSON string of conversation state
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"

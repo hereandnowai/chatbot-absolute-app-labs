@@ -1,0 +1,101 @@
+╔════════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║           🎯 QUICK START: Get Your HubSpot Credentials            ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝
+
+📍 WHERE ARE LEADS SAVED NOW?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Local Database: backend/chat_sessions.db
+   └─ I found 1 lead: Ruthran (ruthran@hereandnow.co.in)
+
+❌ HubSpot CRM: NOT SYNCING YET
+   └─ Need to add your API credentials
+
+
+🔑 GET YOUR HUBSPOT TOKEN (5 minutes)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: Login to HubSpot
+   👉 https://app.hubspot.com/
+
+STEP 2: Go to Settings
+   👉 Click the ⚙️ icon (top right)
+
+STEP 3: Private Apps
+   👉 Left menu: Integrations → Private Apps
+   👉 Click "Create a private app"
+
+STEP 4: Name Your App
+   👉 Name: "Absolute App Labs Chatbot"
+   👉 Description: "Lead capture"
+
+STEP 5: Set Permissions (Scopes tab)
+   ✅ crm.objects.contacts.read
+   ✅ crm.objects.contacts.write
+   ✅ crm.schemas.contacts.read
+
+STEP 6: Create & Copy
+   👉 Click "Create app"
+   👉 COPY the token shown
+   👉 Looks like: pat-na1-xxxx-xxxx-xxxx-xxxx
+
+
+💻 ADD TOKEN TO YOUR CHATBOT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPTION A - Automated (Easiest):
+   cd /Users/hnai/Downloads/absolute-app-labs
+   ./setup-hubspot.sh
+
+OPTION B - Manual:
+   1. Open: /Users/hnai/Downloads/absolute-app-labs/.env
+   2. Find: HUBSPOT_API_KEY=your-hubspot-api-key-here
+   3. Replace with: HUBSPOT_API_KEY=pat-na1-your-actual-token
+   4. Save file
+
+
+🔄 RESTART YOUR SERVER
+━━━━━━━━━━━━━━━━━━━━━━
+
+   lsof -ti:8000 | xargs kill -9
+   cd /Users/hnai/Downloads/absolute-app-labs
+   python3 backend/main.py > /tmp/backend.log 2>&1 &
+
+
+✅ TEST IT WORKS
+━━━━━━━━━━━━━━━━
+
+1. Open: http://localhost:3000/
+2. Use the chatbot to submit a test lead
+3. Check HubSpot: https://app.hubspot.com/contacts/
+4. Your lead should appear there!
+
+
+📚 DETAILED GUIDE
+━━━━━━━━━━━━━━━━
+
+   👉 See: HUBSPOT_SETUP.md (full documentation)
+   👉 Run: ./setup-hubspot.sh (automated setup)
+
+
+❓ QUICK HELP
+━━━━━━━━━━━━
+
+View leads in database:
+   cd backend
+   sqlite3 chat_sessions.db "SELECT * FROM chat_sessions"
+
+Check if HubSpot key is set:
+   cat .env | grep HUBSPOT
+
+View backend logs:
+   tail -f /tmp/backend.log
+
+
+═══════════════════════════════════════════════════════════════════
+
+Need help? Check HUBSPOT_SETUP.md for troubleshooting!
+
+═══════════════════════════════════════════════════════════════════

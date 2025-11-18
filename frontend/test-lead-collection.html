@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Lead Collection - Absolute App Labs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+        .test-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #274DA1;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .debug-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .debug-output pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        button {
+            background: #274DA1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #1e3a7a;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .test-controls {
+            margin: 15px 0;
+        }
+        .message-log {
+            background: white;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .message-log.user {
+            background: #e3f2fd;
+        }
+        .message-log.bot {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Lead Collection System Test</h1>
+    <p>Testing the structured lead collection flow with product bubbles and HubSpot integration</p>
+
+    <div class="test-panel">
+        <h2>📊 System Status</h2>
+        <div id="backendStatus" class="status info">Checking backend...</div>
+        <div id="sessionStatus" class="status info">No session created yet</div>
+    </div>
+
+    <div class="test-panel">
+        <h2>🎯 Test Flow</h2>
+        <div class="test-controls">
+            <button onclick="testProductBubbles()">1️⃣ Test Product Bubbles</button>
+            <button onclick="testFieldValidation()">2️⃣ Test Field Validation</button>
+            <button onclick="testCompleteFlow()">3️⃣ Test Complete Flow</button>
+            <button onclick="clearSession()">🗑️ Clear Session</button>
+        </div>
+        <div id="testOutput" class="debug-output">
+            <pre>Click a test button to start...</pre>
+        </div>
+    </div>
+
+    <div class="test-panel">
+        <h2>💬 Conversation Log</h2>
+        <div id="conversationLog"></div>
+    </div>
+
+    <div class="test-panel">
+        <h2>🔍 Debug Output</h2>
+        <div id="debugOutput" class="debug-output">
+            <pre>Waiting for interactions...</pre>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        const API_BASE = 'http://localhost:8000/api';
+
+        // Initialize
+        async function init() {
+            await checkBackend();
+            sessionId = 'test-' + Date.now();
+            updateStatus('sessionStatus', `Session ID: ${sessionId}`, 'success');
+        }
+
+        async function checkBackend() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    updateStatus('backendStatus', '✅ Backend is running on port 8000', 'success');
+                } else {
+                    updateStatus('backendStatus', '❌ Backend responded with error', 'error');
+                }
+            } catch (error) {
+                updateStatus('backendStatus', '❌ Backend not reachable - is it running?', 'error');
+            }
+        }
+
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+        }
+
+        function log(message, data = null) {
+            const output = document.getElementById('testOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            let logMessage = `[${timestamp}] ${message}`;
+            if (data) {
+                logMessage += '\n' + JSON.stringify(data, null, 2);
+            }
+            output.innerHTML = `<pre>${logMessage}\n\n${output.innerHTML}</pre>`;
+        }
+
+        function addToConversationLog(sender, message, data = null) {
+            const conversationLog = document.getElementById('conversationLog');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message-log ${sender}`;
+            
+            let content = `<strong>${sender.toUpperCase()}:</strong> ${message}`;
+            if (data) {
+                content += `<br><small>${JSON.stringify(data, null, 2)}</small>`;
+            }
+            
+            messageDiv.innerHTML = content;
+            conversationLog.appendChild(messageDiv);
+            messageDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateDebugOutput(data) {
+            const debugOutput = document.getElementById('debugOutput');
+            debugOutput.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        async function sendMessage(message) {
+            try {
+                log(`Sending message: "${message}"`);
+                addToConversationLog('user', message);
+
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: message
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log('Received response', data);
+                
+                const botMessage = data.text || data.reply || 'No response text';
+                addToConversationLog('bot', botMessage, {
+                    quick_replies: data.quick_replies,
+                    slots: data.slots,
+                    actions: data.actions
+                });
+                
+                updateDebugOutput(data);
+                
+                return data;
+            } catch (error) {
+                log(`ERROR: ${error.message}`, error);
+                addToConversationLog('system', `❌ Error: ${error.message}`);
+                throw error;
+            }
+        }
+
+        async function testProductBubbles() {
+            log('🧪 TEST 1: Product Bubbles');
+            log('Sending initial message to trigger product selection...');
+            
+            const response = await sendMessage('Hello');
+            
+            if (response.quick_replies && response.quick_replies.length > 0) {
+                log(`✅ SUCCESS: Got ${response.quick_replies.length} quick replies`);
+                log('Quick replies:', response.quick_replies);
+            } else {
+                log('❌ FAIL: No quick replies in response');
+            }
+        }
+
+        async function testFieldValidation() {
+            log('🧪 TEST 2: Field Validation');
+            
+            // Clear session first
+            sessionId = 'test-validation-' + Date.now();
+            log(`New session: ${sessionId}`);
+            
+            // Select a product
+            log('Step 1: Selecting Mobile App...');
+            await sendMessage('Mobile App Development');
+            await sleep(500);
+            
+            // Test invalid name
+            log('Step 2: Testing invalid name (single char)...');
+            await sendMessage('A');
+            await sleep(500);
+            
+            // Test valid name
+            log('Step 3: Providing valid name...');
+            await sendMessage('John Doe');
+            await sleep(500);
+            
+            // Test invalid phone
+            log('Step 4: Testing invalid phone...');
+            await sendMessage('123');
+            await sleep(500);
+            
+            // Test valid phone
+            log('Step 5: Providing valid phone...');
+            await sendMessage('+1234567890');
+            await sleep(500);
+            
+            // Test invalid email
+            log('Step 6: Testing invalid email...');
+            await sendMessage('notanemail');
+            await sleep(500);
+            
+            // Test valid email
+            log('Step 7: Providing valid email...');
+            await sendMessage('john@example.com');
+            
+            log('✅ Validation test complete');
+        }
+
+        async function testCompleteFlow() {
+            log('🧪 TEST 3: Complete Flow');
+            
+            // Clear session
+            sessionId = 'test-complete-' + Date.now();
+            log(`New session: ${sessionId}`);
+            
+            log('Step 1: Initial greeting...');
+            await sendMessage('Hi there');
+            await sleep(1000);
+            
+            log('Step 2: Selecting Web App Development...');
+            await sendMessage('Web App Development');
+            await sleep(1000);
+            
+            log('Step 3: Providing name...');
+            await sendMessage('Jane Smith');
+            await sleep(1000);
+            
+            log('Step 4: Providing phone...');
+            await sendMessage('+12025551234');
+            await sleep(1000);
+            
+            log('Step 5: Providing email...');
+            await sendMessage('jane.smith@example.com');
+            await sleep(1000);
+            
+            log('Step 6: Describing project goal...');
+            await sendMessage('I need a customer portal for my business');
+            await sleep(1000);
+            
+            log('Step 7: Asking a general question...');
+            await sendMessage('What technologies do you use?');
+            
+            log('✅ Complete flow test finished');
+        }
+
+        async function clearSession() {
+            sessionId = 'test-' + Date.now();
+            updateStatus('sessionStatus', `New Session ID: ${sessionId}`, 'success');
+            document.getElementById('conversationLog').innerHTML = '';
+            document.getElementById('debugOutput').innerHTML = '<pre>Session cleared</pre>';
+            log('🔄 Session cleared');
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

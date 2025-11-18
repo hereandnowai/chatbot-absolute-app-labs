@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Chat Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        #messages { border: 1px solid #ccc; padding: 10px; min-height: 200px; margin-bottom: 10px; }
+        .message { padding: 10px; margin: 5px 0; border-radius: 8px; }
+        .user { background: #e3f2fd; text-align: right; }
+        .bot { background: #f5f5f5; }
+        input { width: 300px; padding: 8px; }
+        button { padding: 8px 20px; }
+    </style>
+</head>
+<body>
+    <h1>Simple Chat Test</h1>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+    
+    <script>
+        let sessionId = null;
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            // Show user message
+            addMessage('You: ' + message, 'user');
+            input.value = '';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: message
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                sessionId = data.session_id;
+                
+                // Show bot message
+                const botText = data.text || data.reply || 'No response';
+                addMessage('Bot: ' + botText, 'bot');
+                
+                // Show quick replies if any
+                if (data.quick_replies && data.quick_replies.length > 0) {
+                    const replies = data.quick_replies.map(r => r.label).join(', ');
+                    addMessage('Quick replies: ' + replies, 'bot');
+                }
+            } catch (error) {
+                addMessage('Error: ' + error.message, 'bot');
+                console.error(error);
+            }
+        }
+        
+        function addMessage(text, type) {
+            const div = document.createElement('div');
+            div.className = 'message ' + type;
+            div.textContent = text;
+            document.getElementById('messages').appendChild(div);
+        }
+        
+        // Allow Enter key
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>

@@ -280,8 +280,22 @@ class ChatWidget {
             // Hide typing indicator
             this.hideTypingIndicator();
             
-            // Add bot response
-            this.addMessage(data.reply, 'bot', data.sources);
+            // Add bot response (using 'text' instead of 'reply')
+            const botText = data.text || data.reply || "I'm here to help!";  // Backwards compatibility
+            console.log('Bot text to display:', botText);
+            
+            if (botText && botText.trim()) {
+                this.addMessage(botText, 'bot', data.sources);
+            } else {
+                console.error('Empty bot response received:', data);
+                this.addMessage("Sorry, I didn't get a proper response. Please try again.", 'bot');
+            }
+            
+            // Add quick reply bubbles if provided
+            if (data.quick_replies && data.quick_replies.length > 0) {
+                console.log('Adding quick replies:', data.quick_replies);
+                this.addQuickReplies(data.quick_replies);
+            }
             
         } catch (error) {
             console.error('Error sending message:', error);
@@ -330,12 +344,29 @@ class ChatWidget {
     }
     
     addMessage(text, role, sources = []) {
+        // Safety check for empty or undefined text
+        if (!text || typeof text !== 'string') {
+            console.error('Invalid message text:', text);
+            text = 'Message could not be displayed';
+        }
+        
+        // Trim whitespace
+        text = text.trim();
+        if (!text) {
+            console.error('Empty message after trimming');
+            text = 'Empty message received';
+        }
+        
+        console.log(`Adding ${role} message:`, text.substring(0, 50) + '...');
+        
         const messageDiv = document.createElement('div');
         messageDiv.className = `chat-message ${role}`;
         
         const bubble = document.createElement('div');
         bubble.className = 'message-bubble';
-        bubble.textContent = text;
+        
+        // Use innerHTML instead of textContent to properly handle Unicode/emojis
+        bubble.innerHTML = this.escapeHtml(text).replace(/\n/g, '<br>');
         
         messageDiv.appendChild(bubble);
         
@@ -400,6 +431,36 @@ class ChatWidget {
         messageDiv.appendChild(timestamp);
         
         this.messages.appendChild(messageDiv);
+        this.scrollToBottom();
+    }
+    
+    addQuickReplies(quickReplies) {
+        // Remove any existing quick replies
+        const existing = this.messages.querySelector('.quick-replies-container');
+        if (existing) existing.remove();
+        
+        // Create quick replies container
+        const container = document.createElement('div');
+        container.className = 'quick-replies-container';
+        
+        quickReplies.forEach(reply => {
+            const button = document.createElement('button');
+            button.className = 'quick-reply-btn';
+            button.textContent = reply.label;
+            button.dataset.id = reply.id;
+            button.dataset.label = reply.label;
+            
+            button.addEventListener('click', () => {
+                // Remove quick replies after selection
+                container.remove();
+                // Send the selected option as a message
+                this.sendMessage(reply.label);
+            });
+            
+            container.appendChild(button);
+        });
+        
+        this.messages.appendChild(container);
         this.scrollToBottom();
     }
     
@@ -497,9 +558,18 @@ class ChatWidget {
 
 // Auto-initialize if config is provided
 if (window.chatWidgetConfig) {
-    document.addEventListener('DOMContentLoaded', () => {
-        new ChatWidget(window.chatWidgetConfig);
-    });
+    // Check if DOM is already loaded
+    if (document.readyState === 'loading') {
+        // DOM is still loading, wait for it
+        document.addEventListener('DOMContentLoaded', () => {
+            window.chatWidget = new ChatWidget(window.chatWidgetConfig);
+            console.log('Chat widget initialized on DOMContentLoaded');
+        });
+    } else {
+        // DOM is already loaded, initialize immediately
+        window.chatWidget = new ChatWidget(window.chatWidgetConfig);
+        console.log('Chat widget initialized immediately (DOM already loaded)');
+    }
 }
 
 // Export for manual initialization

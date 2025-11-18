@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Index Page Chat Widget</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 50px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #274DA1;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+            background: #f1f8f4;
+        }
+        .info {
+            background: #e3f2fd;
+            border-left-color: #2196F3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        #console-output {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 5px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .console-line {
+            margin: 3px 0;
+        }
+        .console-error {
+            color: #ef5350;
+        }
+        .console-log {
+            color: #aed581;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Index Page Chat Widget Diagnostic</h1>
+        
+        <div class="status">
+            ✅ <strong>Frontend Server:</strong> Running on port 3000
+        </div>
+        
+        <div class="status">
+            ✅ <strong>Backend Server:</strong> Running on port 8000
+        </div>
+        
+        <div class="status info">
+            ℹ️ This page loads the chat widget exactly like index.html does
+        </div>
+        
+        <h2>Console Output</h2>
+        <div id="console-output">Waiting for console logs...</div>
+        
+        <h2>Test Actions</h2>
+        <button onclick="testWidget()" style="padding: 10px 20px; background: #274DA1; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px;">
+            Test Widget Manually
+        </button>
+        <button onclick="clearConsole()" style="padding: 10px 20px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px;">
+            Clear Console
+        </button>
+    </div>
+
+    <!-- Chat Widget Integration - Same as index.html -->
+    <link rel="stylesheet" href="/components/chat-widget/chat-widget.css">
+    <script>
+        // Capture console output
+        const consoleOutput = [];
+        const consoleDiv = document.getElementById('console-output');
+        
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function addToConsole(type, args) {
+            const message = Array.from(args).map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            consoleOutput.push({ type, message, time: new Date().toLocaleTimeString() });
+            updateConsoleDisplay();
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole('log', args);
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole('error', args);
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole('warn', args);
+        };
+        
+        function updateConsoleDisplay() {
+            if (consoleDiv) {
+                consoleDiv.innerHTML = consoleOutput.slice(-50).map(entry => {
+                    const className = `console-${entry.type}`;
+                    return `<div class="console-line ${className}">[${entry.time}] ${entry.message}</div>`;
+                }).join('');
+                consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            }
+        }
+        
+        function testWidget() {
+            console.log('Testing chat widget...');
+            if (window.chatWidget) {
+                console.log('Chat widget exists!');
+                console.log('Session ID:', window.chatWidget.sessionId);
+                console.log('Config:', window.chatWidget.config);
+            } else {
+                console.error('Chat widget not found!');
+            }
+        }
+        
+        function clearConsole() {
+            consoleOutput.length = 0;
+            if (consoleDiv) {
+                consoleDiv.innerHTML = 'Console cleared';
+            }
+        }
+        
+        // Configure the chat widget - EXACTLY like index.html
+        window.chatWidgetConfig = {
+            apiUrl: 'http://localhost:8000',
+            welcomeMessage: 'Hi! I\'m your AI assistant from Absolute App Labs. How can I help you today?',
+            quickQuestions: [
+                'What services does Absolute App Labs offer?',
+                'Tell me about your AI capabilities',
+                'How can I get started with a project?',
+                'What is your product development process?'
+            ]
+        };
+        
+        console.log('Chat widget config set:', window.chatWidgetConfig);
+    </script>
+    <script src="/components/chat-widget/chat-widget.js"></script>
+    <script>
+        // Log when everything is loaded
+        window.addEventListener('load', function() {
+            console.log('Page fully loaded');
+            console.log('ChatWidget class available:', typeof ChatWidget);
+            setTimeout(() => {
+                testWidget();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

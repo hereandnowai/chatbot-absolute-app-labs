@@ -525,9 +525,43 @@
 .chat-header-btn:focus,
 .feedback-btn:focus,
 .chat-send-btn:focus,
-.quick-question-btn:focus {
+.quick-question-btn:focus,
+.quick-reply-btn:focus {
     outline: 2px solid var(--chat-primary-blue);
     outline-offset: 2px;
+}
+
+/* Quick Replies (Product Bubbles) */
+.quick-replies-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+}
+
+.quick-reply-btn {
+    background: var(--chat-primary-blue);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(39, 77, 161, 0.15);
+}
+
+.quick-reply-btn:hover {
+    background: var(--chat-primary-blue-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(39, 77, 161, 0.25);
+}
+
+.quick-reply-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(39, 77, 161, 0.15);
 }
 
 .sr-only {
