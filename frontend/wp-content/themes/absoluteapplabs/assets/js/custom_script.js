@@ -1546,6 +1546,10 @@
 	document.addEventListener("DOMContentLoaded", () => {
 		const words = ["CLOUD", "DATA", "FULL-STACK", "AI"];
 		const span = document.querySelector(".title-multi-color");
+		
+		// Only run word rotation if the element exists
+		if (!span) return;
+		
 		let index = 0;
 
 		setInterval(() => {

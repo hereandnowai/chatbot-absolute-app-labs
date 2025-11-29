@@ -25,7 +25,15 @@ HUBSPOT_API_KEY = os.getenv("HUBSPOT_API_KEY", "")
 SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT", "3600"))
 MAX_HISTORY_LENGTH = int(os.getenv("MAX_HISTORY_LENGTH", "6"))
 RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "10"))
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8000,http://127.0.0.1:3000,http://127.0.0.1:8000").split(",")
+
+# CORS Origins - default includes localhost and allows * for development
+# For production, set CORS_ORIGINS environment variable with specific domains
+DEFAULT_CORS = "http://localhost:3000,http://localhost:8000,http://127.0.0.1:3000,http://127.0.0.1:8000,http://43.204.18.67,http://43.204.18.67:443,http://43.204.18.67:80"
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", DEFAULT_CORS).split(",")
+
+# Add wildcard support - if "*" is in the list, allow all origins
+if "*" in CORS_ORIGINS:
+    CORS_ORIGINS = ["*"]
 
 print(f"✓ Configuration loaded successfully")
 print(f"  - API: {API_HOST}:{API_PORT}")

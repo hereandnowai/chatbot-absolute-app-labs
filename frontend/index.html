@@ -3341,17 +3341,34 @@ var wpcf7iqfix = {"recaptcha_empty":"Please verify that you are not a robot.","r
 <!-- Chat Widget Integration -->
 <link rel="stylesheet" href="/components/chat-widget/chat-widget.css">
 <script>
-    // Configure the chat widget
-    window.chatWidgetConfig = {
-        apiUrl: 'http://localhost:8000',
-        welcomeMessage: 'Hi! I\'m your AI assistant from Absolute App Labs. How can I help you today?',
-        quickQuestions: [
-            'What services does Absolute App Labs offer?',
-            'Tell me about your AI capabilities',
-            'How can I get started with a project?',
-            'What is your product development process?'
-        ]
-    };
+    // Configure the chat widget - auto-detect environment
+    (function() {
+        // Determine API URL based on current environment
+        var currentHost = window.location.hostname;
+        var apiUrl;
+        
+        if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+            // Local development
+            apiUrl = 'http://localhost:8000';
+        } else {
+            // Production - use same host with backend port or path
+            // For AWS: backend should be on same server or use a subdomain/path
+            apiUrl = window.location.protocol + '//' + currentHost + ':8000';
+        }
+        
+        window.chatWidgetConfig = {
+            apiUrl: apiUrl,
+            welcomeMessage: 'Hi! I\'m your AI assistant from Absolute App Labs. How can I help you today?',
+            quickQuestions: [
+                'What services does Absolute App Labs offer?',
+                'Tell me about your AI capabilities',
+                'How can I get started with a project?',
+                'What is your product development process?'
+            ]
+        };
+        
+        console.log('Chat widget configured with API URL:', apiUrl);
+    })();
 </script>
 <script src="/components/chat-widget/chat-widget.js"></script>
 <!-- End Chat Widget -->
