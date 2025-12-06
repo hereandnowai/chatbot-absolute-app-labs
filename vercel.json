@@ -1,0 +1,17 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://43.204.18.67:8000/api/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    }
+  ]
+}

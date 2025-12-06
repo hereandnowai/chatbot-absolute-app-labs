@@ -3347,14 +3347,16 @@ var wpcf7iqfix = {"recaptcha_empty":"Please verify that you are not a robot.","r
         var currentHost = window.location.hostname;
         var apiUrl;
         
-        if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-            // Local development
-            apiUrl = 'http://localhost:8000';
-        } else {
-            // Production - use same host with backend port or path
-            // For AWS: backend should be on same server or use a subdomain/path
-            apiUrl = window.location.protocol + '//' + currentHost + ':8000';
-        }
+		if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+			// Local development
+			apiUrl = 'http://localhost:8000';
+		} else {
+			// Production: use a relative /api path so Vercel (or any host) can
+			// proxy/rewrite requests to your backend. This is the recommended
+			// approach when deploying the frontend to Vercel while backend
+			// remains elsewhere (EC2, Render, etc.).
+			apiUrl = '/api';
+		}
         
         window.chatWidgetConfig = {
             apiUrl: apiUrl,
